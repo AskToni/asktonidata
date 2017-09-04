@@ -11,7 +11,7 @@ namespace asktonidata
 
             //DataClient.Dc.MineYelpData();
             //DataClient.Dc.GetToken().Wait();
-            //DataClient.Dc.GetReviewsFromBusinessData().Wait();
+            DataClient.Dc.GetReviewsFromBusinessData().Wait();
 
             Console.WriteLine("Program finished execution");
         }

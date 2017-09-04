@@ -15,6 +15,7 @@ public class Review
 
     [BsonElement("Rating")]
     public double Rating { get; set;}
-    [BsonElement("TimeCreated")]
-    public DateTime TimeCreated {get; set;}
+    [BsonElement("UserId")]
+    public string UserId { get; set;}
+    
 }

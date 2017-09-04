@@ -66,7 +66,7 @@ namespace asktonidata {
             JToken businesses = json.SelectToken("businesses");
 
             foreach (JToken b in businesses) {
-                string[] categories = b["categories"].Children()["title"].Select(s => (string) s).ToArray();
+                List<string> categories = new List<string>(b["categories"].Children()["title"].Select(s => (string) s));
                 try {
                     MongoHelper.Client.AddToDatabase(new Restaurant() { Id = ObjectId.GenerateNewId(), RestaurantName = b["name"].ToString(),
                                                                     Categories = categories, ReviewCount = (int) b["review_count"],
@@ -92,38 +92,47 @@ namespace asktonidata {
                     IEnumerable<Restaurant> batch = cursor.Current;
                     foreach (Restaurant r in batch)
                     {
-                        await GetReviews(r.RestaurantId, r.RestaurantName);
+                        await GetReviews(r, collection);
                     }
                 }
             }
         }
         
         // Get reviews for a restaurant given a restaurantId and restaurantName
-        public async Task GetReviews(string restaurantId, string restaurantName) {
+        public async Task GetReviews(Restaurant restaurant, IMongoCollection<Restaurant> col) {
             // TODO: Initialize this with constructor instead of putting it here
             if (!headersAdded) {
                 _dc.DefaultRequestHeaders.Accept.Clear();
                 _dc.DefaultRequestHeaders.Add("Authorization", "Bearer " + ConfigurationManager.Config.GetSetting("Token"));
                 headersAdded = true;
             }
-            var httpRequest= _dc.GetStringAsync("https://api.yelp.com/v3/businesses/" + restaurantId + "/reviews");
+            var httpRequest= _dc.GetStringAsync("https://api.yelp.com/v3/businesses/" + restaurant.RestaurantId + "/reviews");
             var response = await httpRequest;
 
             JObject json= JObject.Parse(response);
 
             JToken reviews = json.SelectToken("reviews");
 
+            List<string> restaurantReviews = new List<string>();
+
             foreach (JToken r in reviews) {
                 try {
-                    MongoHelper.Client.AddToDatabase(new Review() { Id = ObjectId.GenerateNewId(), RestaurantId = restaurantId,
+                    ObjectId newId = ObjectId.GenerateNewId();
+                    MongoHelper.Client.AddToDatabase(new Review() { Id = newId, RestaurantId = restaurant.RestaurantId,
                                                                     Text = r["text"].ToString(), Rating = (double) r["rating"],
-                                                                    TimeCreated = (DateTime) r["time_created"], RestaurantName = restaurantName
+                                                                    RestaurantName = restaurant.RestaurantName
                                                                     }).Wait();
+                    restaurantReviews.Add(newId.ToString());
                 } catch (Exception ex) {
-                    Console.WriteLine("Something went wrong with: " + restaurantId);
+                    Console.WriteLine("Something went wrong with: " + restaurant.RestaurantId);
                     Console.WriteLine(ex.Message);
                 }
             }
+            // Add review IDs to the restaurant document
+            col.UpdateOneAsync(
+                Builders<Restaurant>.Filter.Eq(s => s.Id, restaurant.Id),
+                Builders<Restaurant>.Update.Set("ReviewIDs",restaurantReviews)
+            ).Wait();
         }
 
         // Get Yelp API token by querying the token endpoint

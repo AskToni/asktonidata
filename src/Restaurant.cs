@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -27,5 +28,8 @@ public class Restaurant
     [BsonElement("Phone")]
     public string Phone { get; set;}
     [BsonElement("Categories")]
-    public string[] Categories {get; set;}
+    public List<string> Categories {get; set;}
+
+    [BsonElement("ReviewIDs")]
+    public List<string> ReviewIDs { get; set;}
 }
