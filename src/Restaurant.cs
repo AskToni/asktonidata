@@ -27,6 +27,10 @@ public class Restaurant
     public string ZipCode {get; set;}
     [BsonElement("Phone")]
     public string Phone { get; set;}
+    [BsonElement("Longitude")]
+    public double Longitude { get; set;}
+    [BsonElement("Latitude")]
+    public double Latitude { get; set;}
     [BsonElement("Categories")]
     public List<string> Categories {get; set;}
 

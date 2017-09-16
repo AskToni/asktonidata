@@ -69,6 +69,7 @@ namespace asktonidata {
                 List<string> categories = new List<string>(b["categories"].Children()["title"].Select(s => (string) s));
                 try {
                     MongoHelper.Client.AddToDatabase(new Restaurant() { Id = ObjectId.GenerateNewId(), RestaurantName = b["name"].ToString(),
+                                                                    Longitude = (double) b["coordinates"]["longitude"], Latitude = (double) b["coordinates"]["latitude"],
                                                                     Categories = categories, ReviewCount = (int) b["review_count"],
                                                                     Rating = (double) b["rating"], Price = b["price"].ToString(), Address = b["location"]["address1"].ToString(), 
                                                                     City = b["location"]["city"].ToString(), RestaurantId = b["id"].ToString(), Phone = b["phone"].ToString()}).Wait();
